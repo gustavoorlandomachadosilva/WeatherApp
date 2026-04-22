@@ -27,12 +27,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.weatherapp.ui.theme.WeatherAppTheme
-import androidx.compose.ui.platform.LocalContext
 
 
 class LoginActivity : ComponentActivity() {
@@ -51,17 +50,18 @@ class LoginActivity : ComponentActivity() {
     }
 }
 
-@Preview(showBackground = true)
 @Composable
 fun LoginPage(modifier: Modifier = Modifier) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    //tive que usar LocalContext ao inves de LocalActivity
-    val activity = LocalContext.current as Activity
 
-    val modifier = modifier.fillMaxWidth(fraction = 0.9f)
+    val activity = LocalContext.current as Activity
+    val fieldModifier = Modifier.fillMaxWidth(0.9f)
+
     Column(
-        modifier = modifier.padding(24.dp).fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -69,43 +69,71 @@ fun LoginPage(modifier: Modifier = Modifier) {
             text = "Bem-vindo/a!",
             fontSize = 24.sp
         )
+
         Spacer(modifier = Modifier.size(12.dp))
 
         OutlinedTextField(
             value = email,
-            label = { Text(text = "Digite seu e-mail") },
-            modifier = modifier,
+            label = { Text("Digite seu e-mail") },
+            modifier = fieldModifier,
             onValueChange = { email = it }
         )
+
         Spacer(modifier = Modifier.size(12.dp))
 
         OutlinedTextField(
             value = password,
-            label = { Text(text = "Digite sua senha") },
-            modifier = modifier,
+            label = { Text("Digite sua senha") },
+            modifier = fieldModifier,
             onValueChange = { password = it },
             visualTransformation = PasswordVisualTransformation()
         )
+
+        Spacer(modifier = Modifier.size(16.dp))
+
+        Row(
+            modifier = fieldModifier,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = {
+                    //Fazendo a comparação com o que está no Object Database
+                    if (email == Database.emailRegistered &&
+                        password == Database.passwordRegistered
+                    ) {
+                        Toast.makeText(activity, "Login feito com Sucesso!", Toast.LENGTH_LONG).show()
+                        activity.startActivity(
+                            Intent(activity, MainActivity::class.java)
+                                .setFlags(FLAG_ACTIVITY_SINGLE_TOP)
+                        )
+                    } else {
+                        Toast.makeText(activity, "Erro! Digite os dados corretos", Toast.LENGTH_LONG).show()
+                    }
+                },
+                enabled = email.isNotEmpty() && password.isNotEmpty(),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Login")
+            }
+
+            Button(
+                onClick = {
+                    val intent = Intent(activity, RegisterActivity::class.java)
+                    activity.startActivity(intent)
+                },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Cadastrar")
+            }
+        }
+
         Spacer(modifier = Modifier.size(12.dp))
 
-        Row(modifier = modifier.padding(12.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
-            Button( onClick = {
-                Toast.makeText(activity, "Login OK!", Toast.LENGTH_LONG).show()
-                activity.startActivity(
-                    Intent(activity, MainActivity::class.java).setFlags(
-                        FLAG_ACTIVITY_SINGLE_TOP
-                    )
-                )
-            },
-                enabled = email.isNotEmpty() && password.isNotEmpty()
-                ) {
-                Text(text = "Login")
-            }
-            Button(
-                onClick = { email = ""; password = "" }
-            ) {
-                Text(text = "Limpar")
-            }
+        Button(
+            onClick = { email = ""; password = "" },
+            modifier = fieldModifier
+        ) {
+            Text("Limpar")
         }
     }
 }
