@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization")
+
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -39,6 +41,9 @@ android {
 }
 
 dependencies {
+    implementation("com.google.android.gms:play-services-maps:20.0.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+    implementation("com.google.maps.android:maps-compose:8.3.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
     implementation("androidx.navigation:navigation-compose:2.9.8")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
