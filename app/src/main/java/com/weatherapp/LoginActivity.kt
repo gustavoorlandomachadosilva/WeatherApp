@@ -97,18 +97,17 @@ fun LoginPage(modifier: Modifier = Modifier) {
         ) {
             Button(
                 onClick = {
-                    //Fazendo a comparação com o que está no Object Database
-                    if (email == Database.emailRegistered &&
-                        password == Database.passwordRegistered
-                    ) {
-                        Toast.makeText(activity, "Login feito com Sucesso!", Toast.LENGTH_LONG).show()
-                        activity.startActivity(
-                            Intent(activity, MainActivity::class.java)
-                                .setFlags(FLAG_ACTIVITY_SINGLE_TOP)
-                        )
-                    } else {
-                        Toast.makeText(activity, "Erro! Digite os dados corretos", Toast.LENGTH_LONG).show()
-                    }
+
+                    Toast.makeText(
+                        activity,
+                        "Login feito com Sucesso!",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    activity.startActivity(
+                        Intent(activity, MainActivity::class.java)
+                            .setFlags(FLAG_ACTIVITY_SINGLE_TOP)
+                    )
                 },
                 enabled = email.isNotEmpty() && password.isNotEmpty(),
                 modifier = Modifier.weight(1f)

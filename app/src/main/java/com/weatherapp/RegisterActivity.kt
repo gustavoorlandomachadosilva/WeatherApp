@@ -100,11 +100,13 @@ fun RegisterPage(modifier: Modifier = Modifier) {
 
             Button(
                 onClick = {
-                    //Utilizando o Objeto Database que criei
-                    Database.emailRegistered = email
-                    Database.passwordRegistered = password
 
-                    Toast.makeText(activity, "Cadastro feito com Sucesso!", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        activity,
+                        "Cadastro feito com Sucesso!",
+                        Toast.LENGTH_LONG
+                    ).show()
+
                     activity.finish()
                 },
                 enabled = isFormValid
