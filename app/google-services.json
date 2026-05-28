@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "620097224787",
+    "project_id": "tensile-tenure-497016-q4",
+    "storage_bucket": "tensile-tenure-497016-q4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:620097224787:android:a7e36491d90372dda5c6a6",
+        "android_client_info": {
+          "package_name": "com.weatherapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBX-V1m7KHt5eejLjlsxFLsH8N39bASyZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
