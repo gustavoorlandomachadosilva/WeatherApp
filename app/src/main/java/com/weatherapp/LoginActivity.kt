@@ -2,7 +2,6 @@ package com.weatherapp
 
 import android.app.Activity
 import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -31,9 +30,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.weatherapp.ui.theme.WeatherAppTheme
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.weatherapp.ui.theme.WeatherAppTheme
 
 
 class LoginActivity : ComponentActivity() {
@@ -105,11 +104,6 @@ fun LoginPage(modifier: Modifier = Modifier) {
                         .addOnCompleteListener(activity) { task ->
 
                             if (task.isSuccessful) {
-
-                                activity.startActivity(
-                                    Intent(activity, MainActivity::class.java)
-                                        .setFlags(FLAG_ACTIVITY_SINGLE_TOP)
-                                )
 
                                 Toast.makeText(
                                     activity,
