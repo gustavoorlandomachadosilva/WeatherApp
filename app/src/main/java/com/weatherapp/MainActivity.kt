@@ -77,7 +77,12 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     topBar = {
                         TopAppBar(
-                            title = { Text("Bem-vindo/a!") },
+
+                            title = { val name = viewModel.user?.name ?: "[carregando...]"
+
+                                Text(
+                                    text = "Bem-vindo/a! $name"
+                                ) },
                             actions = {
                                 IconButton(
                                     onClick = {
