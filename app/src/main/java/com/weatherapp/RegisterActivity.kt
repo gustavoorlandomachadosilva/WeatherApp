@@ -49,11 +49,16 @@ fun RegisterPage(modifier: Modifier = Modifier) {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
 
     val activity = LocalContext.current as Activity
     val fieldModifier = modifier.fillMaxWidth(0.9f)
 
-    val isFormValid = name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()
+    val isFormValid =
+                name.isNotEmpty() &&
+                email.isNotEmpty() &&
+                password.isNotEmpty() &&
+                confirmPassword.isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -93,6 +98,23 @@ fun RegisterPage(modifier: Modifier = Modifier) {
             modifier = fieldModifier
         )
 
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = { confirmPassword = it },
+            label = { Text("Confirmar Senha") },
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = fieldModifier
+        )
+
+        if (
+            confirmPassword.isNotEmpty() &&
+            password != confirmPassword
+        ) {
+            Text("As senhas não coincidem")
+        }
+
         Spacer(modifier = Modifier.height(20.dp))
 
         Row(
@@ -102,6 +124,17 @@ fun RegisterPage(modifier: Modifier = Modifier) {
 
             Button(
                 onClick = {
+
+                    if (password != confirmPassword) {
+
+                        Toast.makeText(
+                            activity,
+                            "As senhas não coincidem!",
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        return@Button
+                    }
 
                     Firebase.auth
                         .createUserWithEmailAndPassword(email, password)
@@ -135,6 +168,7 @@ fun RegisterPage(modifier: Modifier = Modifier) {
                     name = ""
                     email = ""
                     password = ""
+                    confirmPassword = ""
                 }
             ) {
                 Text("Limpar")
