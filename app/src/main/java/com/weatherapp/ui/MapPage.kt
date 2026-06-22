@@ -9,8 +9,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
@@ -24,24 +22,6 @@ fun MapPage(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel
 ) {
-
-    val recife = remember {
-        MarkerState(
-            position = LatLng(-8.05, -34.9)
-        )
-    }
-
-    val caruaru = remember {
-        MarkerState(
-            position = LatLng(-8.27, -35.98)
-        )
-    }
-
-    val joaopessoa = remember {
-        MarkerState(
-            position = LatLng(-7.12, -34.84)
-        )
-    }
 
     val camPosState = rememberCameraPositionState()
 
@@ -61,10 +41,11 @@ fun MapPage(
 
         cameraPositionState = camPosState,
 
-        onMapClick = {
+        onMapClick = { position ->
+
             viewModel.add(
-                name = "Cidade@${it.latitude}:${it.longitude}",
-                location = it
+                name = "Cidade@${position.latitude}:${position.longitude}",
+                location = position
             )
         },
 
@@ -78,41 +59,19 @@ fun MapPage(
 
     ) {
 
-        Marker(
-            state = recife,
-            title = "Recife",
-            snippet = "Marcador em Recife",
-            icon = BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_BLUE
-            )
-        )
+        viewModel.cities.forEach { city ->
 
-        Marker(
-            state = caruaru,
-            title = "Caruaru",
-            snippet = "Marcador em Caruaru",
-            icon = BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_RED
-            )
-        )
-
-        Marker(
-            state = joaopessoa,
-            title = "João Pessoa",
-            snippet = "Marcador em João Pessoa",
-            icon = BitmapDescriptorFactory.defaultMarker(
-                BitmapDescriptorFactory.HUE_GREEN
-            )
-        )
-
-        viewModel.cities.forEach {
-
-            if (it.location != null) {
+            city.location?.let { location ->
 
                 Marker(
-                    state = MarkerState(position = it.location),
-                    title = it.name,
-                    snippet = "${it.location}"
+                    state = MarkerState(
+                        position = location
+                    ),
+
+                    title = city.name,
+
+                    snippet =
+                        "${location.latitude}, ${location.longitude}"
                 )
             }
         }

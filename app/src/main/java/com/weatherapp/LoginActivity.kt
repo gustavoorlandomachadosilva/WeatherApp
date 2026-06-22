@@ -34,14 +34,20 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.weatherapp.ui.theme.WeatherAppTheme
 
-
 class LoginActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         enableEdgeToEdge()
+
         setContent {
             WeatherAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+
                     LoginPage(
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -52,55 +58,98 @@ class LoginActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginPage(modifier: Modifier = Modifier) {
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+fun LoginPage(
+    modifier: Modifier = Modifier
+) {
+
+    var email by rememberSaveable {
+        mutableStateOf("")
+    }
+
+    var password by rememberSaveable {
+        mutableStateOf("")
+    }
 
     val activity = LocalContext.current as Activity
-    val fieldModifier = Modifier.fillMaxWidth(0.9f)
+
+    val fieldModifier =
+        Modifier.fillMaxWidth(0.9f)
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(24.dp),
+
         verticalArrangement = Arrangement.Center,
+
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Text(
             text = "Bem-vindo/a!",
             fontSize = 24.sp
         )
 
-        Spacer(modifier = Modifier.size(12.dp))
+        Spacer(
+            modifier = Modifier.size(12.dp)
+        )
 
         OutlinedTextField(
             value = email,
-            label = { Text("Digite seu e-mail") },
-            modifier = fieldModifier,
-            onValueChange = { email = it }
+
+            onValueChange = {
+                email = it
+            },
+
+            label = {
+                Text("Digite seu e-mail")
+            },
+
+            modifier = fieldModifier
         )
 
-        Spacer(modifier = Modifier.size(12.dp))
+        Spacer(
+            modifier = Modifier.size(12.dp)
+        )
 
         OutlinedTextField(
             value = password,
-            label = { Text("Digite sua senha") },
-            modifier = fieldModifier,
-            onValueChange = { password = it },
-            visualTransformation = PasswordVisualTransformation()
+
+            onValueChange = {
+                password = it
+            },
+
+            label = {
+                Text("Digite sua senha")
+            },
+
+            visualTransformation =
+                PasswordVisualTransformation(),
+
+            modifier = fieldModifier
         )
 
-        Spacer(modifier = Modifier.size(16.dp))
+        Spacer(
+            modifier = Modifier.size(16.dp)
+        )
 
         Row(
             modifier = fieldModifier,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+
+            horizontalArrangement =
+                Arrangement.spacedBy(12.dp)
         ) {
+
             Button(
+
                 onClick = {
 
                     Firebase.auth
-                        .signInWithEmailAndPassword(email, password)
+                        .signInWithEmailAndPassword(
+                            email,
+                            password
+                        )
+
                         .addOnCompleteListener(activity) { task ->
 
                             if (task.isSuccessful) {
@@ -121,28 +170,51 @@ fun LoginPage(modifier: Modifier = Modifier) {
                             }
                         }
                 },
-                enabled = email.isNotEmpty() && password.isNotEmpty(),
+
+                enabled =
+                    email.isNotEmpty() &&
+                            password.isNotEmpty(),
+
                 modifier = Modifier.weight(1f)
+
             ) {
                 Text("Login")
             }
 
             Button(
+
                 onClick = {
-                    val intent = Intent(activity, RegisterActivity::class.java)
+
+                    val intent =
+                        Intent(
+                            activity,
+                            RegisterActivity::class.java
+                        )
+
                     activity.startActivity(intent)
                 },
+
                 modifier = Modifier.weight(1f)
+
             ) {
                 Text("Cadastrar")
             }
         }
 
-        Spacer(modifier = Modifier.size(12.dp))
+        Spacer(
+            modifier = Modifier.size(12.dp)
+        )
 
         Button(
-            onClick = { email = ""; password = "" },
+
+            onClick = {
+
+                email = ""
+                password = ""
+            },
+
             modifier = fieldModifier
+
         ) {
             Text("Limpar")
         }
