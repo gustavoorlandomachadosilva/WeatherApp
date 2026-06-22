@@ -37,6 +37,7 @@ import com.weatherapp.ui.nav.Route
 import com.weatherapp.ui.theme.WeatherAppTheme
 import com.weatherapp.viewmodel.MainViewModel
 import com.weatherapp.viewmodel.MainViewModelFactory
+import com.weatherapp.api.WeatherService
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -47,11 +48,26 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            val fbDB = remember { FBDatabase() }
+            val fbDB =
+                remember {
+                    FBDatabase()
+                }
 
-            val viewModel: MainViewModel = viewModel(
-                factory = MainViewModelFactory(fbDB)
-            )
+            val weatherService =
+                remember {
+                    WeatherService()
+                }
+
+            val viewModel:
+                    MainViewModel =
+                androidx.lifecycle.viewmodel.compose.viewModel(
+
+                    factory =
+                        MainViewModelFactory(
+                            fbDB,
+                            weatherService
+                        )
+                )
 
             var showDialog by remember { mutableStateOf(false) }
 
@@ -79,7 +95,7 @@ class MainActivity : ComponentActivity() {
                         onConfirm = { city ->
 
                             if (city.isNotBlank()) {
-                                viewModel.add(city)
+                                viewModel.addCity(city)
                             }
 
                             showDialog = false

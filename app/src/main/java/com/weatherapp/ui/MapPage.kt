@@ -43,10 +43,8 @@ fun MapPage(
 
         onMapClick = { position ->
 
-            viewModel.add(
-                name = "Cidade@${position.latitude}:${position.longitude}",
-                location = position
-            )
+            viewModel.addCity(position)
+
         },
 
         properties = MapProperties(
