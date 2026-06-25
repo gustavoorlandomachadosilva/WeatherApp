@@ -15,6 +15,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.weatherapp.model.Weather
 import com.weatherapp.viewmodel.MainViewModel
 
 @Composable
@@ -61,16 +62,42 @@ fun MapPage(
 
             city.location?.let { location ->
 
-                Marker(
-                    state = MarkerState(
-                        position = location
-                    ),
+                viewModel.cities.forEach {
 
-                    title = city.name,
+                    if (
+                        it.location != null
+                    ) {
 
-                    snippet =
-                        "${location.latitude}, ${location.longitude}"
-                )
+                        val weather =
+                            viewModel.weather(
+                                it.name
+                            )
+
+                        val desc =
+                            if (
+                                weather ==
+                                Weather.LOADING
+                            )
+                                "Carregando clima..."
+                            else
+                                weather.desc
+
+                        Marker(
+
+                            state =
+                                MarkerState(
+                                    position =
+                                        it.location!!
+                                ),
+
+                            title =
+                                it.name,
+
+                            snippet =
+                                desc
+                        )
+                    }
+                }
             }
         }
     }

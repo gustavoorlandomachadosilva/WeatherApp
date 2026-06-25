@@ -22,4 +22,10 @@ interface WeatherServiceAPI {
         @Query("q")
         query: String
     ): Call<List<APILocation>?>
+
+    @GET("current.json?key=$API_KEY&lang=pt")
+    fun weather(
+        @Query("q")
+        query: String
+    ): Call<APICurrentWeather?>
 }

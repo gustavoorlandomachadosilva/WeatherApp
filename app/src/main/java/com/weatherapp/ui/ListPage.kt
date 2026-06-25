@@ -19,34 +19,46 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.weatherapp.model.City
+import com.weatherapp.model.Weather
 import com.weatherapp.viewmodel.MainViewModel
 
 @Composable
 fun CityItem(
     city: City,
+    weather: Weather,
     onClick: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
+    val desc =
+        if (weather == Weather.LOADING)
+            "Carregando clima..."
+        else
+            weather.desc
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable { onClick() },
+            .clickable {
+                onClick()
+            },
 
         verticalAlignment = Alignment.CenterVertically
     ) {
 
         Icon(
             imageVector = Icons.Rounded.FavoriteBorder,
-            contentDescription = ""
+            contentDescription = null
         )
 
-        Spacer(modifier = Modifier.size(12.dp))
+        Spacer(
+            modifier = Modifier.size(12.dp)
+        )
 
         Column(
-            modifier = modifier.weight(1f)
+            modifier = Modifier.weight(1f)
         ) {
 
             Text(
@@ -55,15 +67,17 @@ fun CityItem(
             )
 
             Text(
-                text = city.weather ?: "Carregando clima...",
+                text = desc,
                 fontSize = 16.sp
             )
         }
 
-        IconButton(onClick = onClose) {
+        IconButton(
+            onClick = onClose
+        ) {
 
             Icon(
-                imageVector = Icons.Filled.Close,
+                imageVector = Icons.Default.Close,
                 contentDescription = "Close"
             )
         }
@@ -76,9 +90,11 @@ fun ListPage(
     viewModel: MainViewModel
 ) {
 
-    val cityList = viewModel.cities
+    val cityList =
+        viewModel.cities
 
-    val activity = LocalContext.current as Activity
+    val activity =
+        LocalContext.current as Activity
 
     LazyColumn(
         modifier = modifier
@@ -86,17 +102,26 @@ fun ListPage(
             .padding(8.dp)
     ) {
 
-        items(cityList, key = { it.name }) { city ->
+        items(
+            items = cityList,
+            key = { it.name }
+        ) { city ->
 
             CityItem(
 
                 city = city,
+
+                weather =
+                    viewModel.weather(
+                        city.name
+                    ),
 
                 onClose = {
                     viewModel.remove(city)
                 },
 
                 onClick = {
+
                     Toast.makeText(
                         activity,
                         "Você clicou em ${city.name}",
