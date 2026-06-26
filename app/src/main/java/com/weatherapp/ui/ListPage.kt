@@ -1,6 +1,5 @@
 package com.weatherapp.ui
 
-import android.app.Activity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,11 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.weatherapp.model.City
 import com.weatherapp.model.Weather
+import com.weatherapp.ui.nav.Route
 import com.weatherapp.viewmodel.MainViewModel
 
 @Composable
@@ -98,9 +97,6 @@ fun ListPage(
     val cityList =
         viewModel.cities
 
-    val activity =
-        LocalContext.current as Activity
-
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -129,6 +125,9 @@ fun ListPage(
 
                     viewModel.city =
                         city.name
+
+                    viewModel.page =
+                        Route.Home
                 }
             )
         }
