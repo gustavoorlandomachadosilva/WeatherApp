@@ -13,6 +13,8 @@ import com.weatherapp.db.fb.toFBCity
 import com.weatherapp.model.City
 import com.weatherapp.model.User
 import com.weatherapp.model.Weather
+import com.weatherapp.model.Forecast
+import com.weatherapp.api.toForecast
 
 class MainViewModel(
     private val db: FBDatabase,
@@ -37,6 +39,18 @@ class MainViewModel(
 
     private val _weather =
         mutableStateMapOf<String, Weather>()
+
+    private val _forecast =
+        mutableStateMapOf<String, List<Forecast>?>()
+
+    private var _city =
+        mutableStateOf<String?>(null)
+
+    var city: String?
+        get() = _city.value
+        set(value) {
+            _city.value = value
+        }
 
     val user: User?
         get() = _user.value
@@ -110,6 +124,20 @@ class MainViewModel(
         }
     }
 
+    private fun loadForecast(
+        name: String
+    ) {
+
+        service.getForecast(name) {
+
+            it?.let {
+
+                _forecast[name] =
+                    it.toForecast()
+            }
+        }
+    }
+
     fun weather(
         name: String
     ) =
@@ -118,6 +146,16 @@ class MainViewModel(
             loadWeather(name)
 
             Weather.LOADING
+        }
+
+    fun forecast(
+        name: String
+    ) =
+        _forecast.getOrPut(name) {
+
+            loadForecast(name)
+
+            emptyList()
         }
 
     override fun onUserLoaded(
