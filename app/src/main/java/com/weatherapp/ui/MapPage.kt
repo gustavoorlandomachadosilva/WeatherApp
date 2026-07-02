@@ -17,6 +17,12 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.weatherapp.model.Weather
 import com.weatherapp.viewmodel.MainViewModel
+import androidx.core.content.ContextCompat.getDrawable
+import androidx.core.graphics.drawable.toBitmap
+import androidx.core.graphics.scale
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.weatherapp.R
+
 
 @Composable
 fun MapPage(
@@ -69,32 +75,34 @@ fun MapPage(
                     ) {
 
                         val weather =
-                            viewModel.weather(
-                                it.name
+                            viewModel.weather(city.name)
+
+                        val image =
+                            weather.bitmap
+                                ?: getDrawable(
+                                    context,
+                                    R.drawable.loading
+                                )!!.toBitmap()
+
+                        val marker =
+                            BitmapDescriptorFactory.fromBitmap(
+                                image.scale(
+                                    120,
+                                    120
+                                )
                             )
 
                         val desc =
-                            if (
-                                weather ==
-                                Weather.LOADING
-                            )
+                            if (weather == Weather.LOADING)
                                 "Carregando clima..."
                             else
                                 weather.desc
 
                         Marker(
-
-                            state =
-                                MarkerState(
-                                    position =
-                                        it.location!!
-                                ),
-
-                            title =
-                                it.name,
-
-                            snippet =
-                                desc
+                            state = MarkerState(position = location),
+                            icon = marker,
+                            title = city.name,
+                            snippet = desc
                         )
                     }
                 }

@@ -123,16 +123,28 @@ class MainViewModel(
         name: String
     ) {
 
-        service.getWeather(name) {
+        service.getWeather(name) { apiWeather ->
 
-            it?.let {
+            apiWeather?.let {
 
-                _weather[name] =
-                    it.toWeather()
+                _weather[name] = it.toWeather()
+
+                loadBitmap(name)
             }
         }
     }
 
+    private fun loadBitmap(name: String) {
+
+        _weather[name]?.let { weather ->
+
+            service.getBitmap(weather.imgUrl) { bitmap ->
+
+                _weather[name] =
+                    weather.copy(bitmap = bitmap)
+            }
+        }
+    }
     private fun loadForecast(
         name: String
     ) {
