@@ -80,6 +80,9 @@ android {
 }
 
 dependencies {
+    implementation(
+        "androidx.work:work-runtime-ktx:2.10.2"
+    )
 
     implementation(
         "io.coil-kt:coil-compose:2.7.0"

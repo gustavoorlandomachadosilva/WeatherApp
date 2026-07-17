@@ -15,11 +15,14 @@ import com.weatherapp.model.User
 import com.weatherapp.model.Weather
 import com.weatherapp.model.Forecast
 import com.weatherapp.api.toForecast
+import com.weatherapp.monitor.ForecastMonitor
 import com.weatherapp.ui.nav.Route
 
 class MainViewModel(
     private val db: FBDatabase,
-    private val service: WeatherService
+    private val service: WeatherService,
+    private val forecastMonitor: ForecastMonitor
+
 ) : ViewModel(),
     FBDatabase.Listener {
 
@@ -139,7 +142,12 @@ class MainViewModel(
         db.update(
             city.toFBCity()
         )
+
+        _cities[city.name] = city
+
+        forecastMonitor.updateCity(city)
     }
+
     private fun loadBitmap(name: String) {
 
         _weather[name]?.let { weather ->
@@ -151,6 +159,7 @@ class MainViewModel(
             }
         }
     }
+
     private fun loadForecast(
         name: String
     ) {
@@ -195,9 +204,14 @@ class MainViewModel(
 
     override fun onUserSignOut() {
 
-        _cities.clear()
+        forecastMonitor.cancelAll()
 
+        _cities.clear()
         _weather.clear()
+        _forecast.clear()
+
+        _city.value = null
+        _page.value = Route.Home
 
         _user.value = null
     }
@@ -206,28 +220,32 @@ class MainViewModel(
         city: FBCity
     ) {
 
-        _cities[city.name!!] =
-            city.toCity()
+        val newCity = city.toCity()
+
+        _cities[city.name!!] = newCity
+
+        forecastMonitor.updateCity(newCity)
     }
 
     override fun onCityUpdated(
         city: FBCity
     ) {
 
-        _cities.remove(
-            city.name
-        )
+        val newCity = city.toCity()
 
-        _cities[city.name!!] =
-            city.toCity()
+        _cities.remove(city.name)
+
+        _cities[city.name!!] = newCity
+
+        forecastMonitor.updateCity(newCity)
     }
 
     override fun onCityRemoved(
         city: FBCity
     ) {
 
-        _cities.remove(
-            city.name
-        )
+        _cities.remove(city.name)
+
+        forecastMonitor.cancelCity(city.toCity())
     }
 }

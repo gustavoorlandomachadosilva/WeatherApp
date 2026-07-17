@@ -1,17 +1,13 @@
 package com.weatherapp.ui
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -47,9 +43,7 @@ fun CityItem(
         modifier = modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .clickable {
-                onClick()
-            },
+            .clickable { onClick() },
 
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -61,18 +55,35 @@ fun CityItem(
             error = painterResource(R.drawable.loading)
         )
 
-        Spacer(
-            modifier = Modifier.size(12.dp)
-        )
+        Spacer(modifier = Modifier.size(12.dp))
 
         Column(
             modifier = Modifier.weight(1f)
         ) {
 
-            Text(
-                text = city.name,
-                fontSize = 24.sp
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = city.name,
+                    fontSize = 24.sp
+                )
+
+                Spacer(modifier = Modifier.size(8.dp))
+
+                Icon(
+                    imageVector =
+                        if (city.isMonitored)
+                            Icons.Filled.Notifications
+                        else
+                            Icons.Outlined.Notifications,
+
+                    contentDescription = "Monitorada",
+
+                    modifier = Modifier.size(20.dp)
+                )
+            }
 
             Text(
                 text = desc,
@@ -86,7 +97,7 @@ fun CityItem(
 
             Icon(
                 imageVector = Icons.Default.Close,
-                contentDescription = "Close"
+                contentDescription = "Remover"
             )
         }
     }
@@ -117,9 +128,7 @@ fun ListPage(
                 city = city,
 
                 weather =
-                    viewModel.weather(
-                        city.name
-                    ),
+                    viewModel.weather(city.name),
 
                 onClose = {
                     viewModel.remove(city)
@@ -127,11 +136,9 @@ fun ListPage(
 
                 onClick = {
 
-                    viewModel.city =
-                        city.name
+                    viewModel.city = city.name
 
-                    viewModel.page =
-                        Route.Home
+                    viewModel.page = Route.Home
                 }
             )
         }

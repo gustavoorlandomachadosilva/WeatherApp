@@ -1,6 +1,7 @@
 package com.weatherapp
 
 import android.Manifest
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -19,12 +20,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.util.Consumer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -32,6 +35,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.weatherapp.api.WeatherService
 import com.weatherapp.db.fb.FBDatabase
+import com.weatherapp.monitor.ForecastMonitor
 import com.weatherapp.ui.CityDialog
 import com.weatherapp.ui.nav.BottomNavBar
 import com.weatherapp.ui.nav.BottomNavItem
@@ -60,44 +64,71 @@ class MainActivity : ComponentActivity() {
                 WeatherService(this)
             }
 
-            val viewModel: MainViewModel =
-                viewModel(
-                    factory =
-                        MainViewModelFactory(
-                            fbDB,
-                            weatherService
-                        )
+            val forecastMonitor = remember {
+                ForecastMonitor(this)
+            }
+
+            val viewModel: MainViewModel = viewModel(
+                factory = MainViewModelFactory(
+                    fbDB,
+                    weatherService,
+                    forecastMonitor
                 )
+            )
+
+            DisposableEffect(Unit) {
+
+                val listener = Consumer<android.content.Intent> { intent ->
+
+                    viewModel.city =
+                        intent.getStringExtra("city")
+
+                    viewModel.page =
+                        Route.Home
+                }
+
+                addOnNewIntentListener(listener)
+
+                onDispose {
+                    removeOnNewIntentListener(listener)
+                }
+            }
 
             var showDialog by remember {
                 mutableStateOf(false)
             }
 
-            val navController =
-                rememberNavController()
+            val navController = rememberNavController()
 
             val currentRoute =
-                navController
-                    .currentBackStackEntryAsState()
+                navController.currentBackStackEntryAsState()
 
             val showButton =
-                currentRoute
-                    .value
-                    ?.destination
-                    ?.route ==
+                currentRoute.value?.destination?.route ==
                         Route.List.toString()
 
-            val launcher =
+            val locationPermissionLauncher =
                 rememberLauncherForActivityResult(
-                    contract =
-                        ActivityResultContracts.RequestPermission(),
-                    onResult = {}
-                )
+                    ActivityResultContracts.RequestPermission()
+                ) { }
+
+            val notificationPermissionLauncher =
+                rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { }
 
             LaunchedEffect(Unit) {
-                launcher.launch(
+
+                locationPermissionLauncher.launch(
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+
+                    notificationPermissionLauncher.launch(
+                        Manifest.permission.POST_NOTIFICATIONS
+                    )
+                }
             }
 
             WeatherAppTheme {
@@ -112,11 +143,8 @@ class MainActivity : ComponentActivity() {
 
                         onConfirm = { city ->
 
-                            if (
-                                city.isNotBlank()
-                            ) {
-                                viewModel
-                                    .addCity(city)
+                            if (city.isNotBlank()) {
+                                viewModel.addCity(city)
                             }
 
                             showDialog = false
@@ -133,34 +161,24 @@ class MainActivity : ComponentActivity() {
                             title = {
 
                                 Text(
-                                    text =
-                                        "Bem-vindo/a! ${
-                                            viewModel.user?.name
-                                                ?: "[carregando...]"
-                                        }"
+                                    text = "Bem-vindo/a! ${
+                                        viewModel.user?.name
+                                            ?: "[carregando...]"
+                                    }"
                                 )
                             },
 
                             actions = {
 
                                 IconButton(
-
                                     onClick = {
-
-                                        Firebase
-                                            .auth
-                                            .signOut()
+                                        Firebase.auth.signOut()
                                     }
-
                                 ) {
 
                                     Icon(
-
-                                        imageVector =
-                                            Icons.AutoMirrored.Filled.ExitToApp,
-
-                                        contentDescription =
-                                            "Sair"
+                                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                                        contentDescription = "Sair"
                                     )
                                 }
                             }
@@ -186,21 +204,14 @@ class MainActivity : ComponentActivity() {
                         if (showButton) {
 
                             FloatingActionButton(
-
                                 onClick = {
-
                                     showDialog = true
                                 }
-
                             ) {
 
                                 Icon(
-
-                                    imageVector =
-                                        Icons.Default.Add,
-
-                                    contentDescription =
-                                        "Adicionar"
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Adicionar"
                                 )
                             }
                         }
@@ -209,48 +220,31 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
 
                     Box(
-                        modifier =
-                            Modifier.padding(
-                                innerPadding
-                            )
+                        modifier = Modifier.padding(innerPadding)
                     ) {
 
                         MainNavHost(
-
-                            navController =
-                                navController,
-
-                            viewModel =
-                                viewModel
+                            navController = navController,
+                            viewModel = viewModel
                         )
                     }
                 }
 
-                LaunchedEffect(
-                    viewModel.page
-                ) {
+                LaunchedEffect(viewModel.page) {
 
                     navController.navigate(
                         viewModel.page.toString()
                     ) {
 
-                        navController
-                            .graph
-                            .startDestinationRoute
-                            ?.let {
+                        navController.graph.startDestinationRoute?.let {
 
-                                popUpTo(it) {
-
-                                    saveState =
-                                        true
-                                }
+                            popUpTo(it) {
+                                saveState = true
                             }
+                        }
 
-                        restoreState =
-                            true
-
-                        launchSingleTop =
-                            true
+                        restoreState = true
+                        launchSingleTop = true
                     }
                 }
             }
