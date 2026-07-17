@@ -134,6 +134,12 @@ class MainViewModel(
         }
     }
 
+    fun update(city: City) {
+
+        db.update(
+            city.toFBCity()
+        )
+    }
     private fun loadBitmap(name: String) {
 
         _weather[name]?.let { weather ->

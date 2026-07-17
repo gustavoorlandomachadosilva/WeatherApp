@@ -11,6 +11,8 @@ class FBCity {
 
     var lng: Double? = null
 
+    var monitored: Boolean? = false
+
     fun toCity(): City {
 
         val latlng =
@@ -21,7 +23,8 @@ class FBCity {
 
         return City(
             name = name!!,
-            location = latlng
+            location = latlng,
+            isMonitored = monitored ?: false
         )
     }
 }
@@ -33,6 +36,7 @@ fun City.toFBCity(): FBCity {
     fbCity.name = this.name
     fbCity.lat = this.location?.latitude ?: 0.0
     fbCity.lng = this.location?.longitude ?: 0.0
+    fbCity.monitored = isMonitored
 
     return fbCity
 }
