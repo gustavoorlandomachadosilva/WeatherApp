@@ -5,43 +5,35 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.google.android.gms.maps.model.LatLng
 import com.weatherapp.api.WeatherService
+import com.weatherapp.api.toForecast
 import com.weatherapp.api.toWeather
-import com.weatherapp.db.fb.FBCity
-import com.weatherapp.db.fb.FBDatabase
-import com.weatherapp.db.fb.FBUser
-import com.weatherapp.db.fb.toFBCity
 import com.weatherapp.model.City
+import com.weatherapp.model.Forecast
 import com.weatherapp.model.User
 import com.weatherapp.model.Weather
-import com.weatherapp.model.Forecast
-import com.weatherapp.api.toForecast
 import com.weatherapp.monitor.ForecastMonitor
+import com.weatherapp.repo.Repository
 import com.weatherapp.ui.nav.Route
 
 class MainViewModel(
-    private val db: FBDatabase,
+    private val repository: Repository,
     private val service: WeatherService,
     private val forecastMonitor: ForecastMonitor
-
-) : ViewModel(),
-    FBDatabase.Listener {
+) : ViewModel(), Repository.Listener {
 
     private val _cities =
         mutableStateMapOf<String, City>()
 
     val cities
         get() =
-            _cities
-                .values
+            _cities.values
                 .toList()
-                .sortedBy {
-                    it.name
-                }
+                .sortedBy { it.name }
 
     private val _user =
         mutableStateOf<User?>(null)
 
-    private var _page =
+    private val _page =
         mutableStateOf<Route>(Route.Home)
 
     var page: Route
@@ -49,13 +41,14 @@ class MainViewModel(
         set(value) {
             _page.value = value
         }
+
     private val _weather =
         mutableStateMapOf<String, Weather>()
 
     private val _forecast =
         mutableStateMapOf<String, List<Forecast>?>()
 
-    private var _city =
+    private val _city =
         mutableStateOf<String?>(null)
 
     var city: String?
@@ -68,42 +61,30 @@ class MainViewModel(
         get() = _user.value
 
     init {
-        db.setListener(this)
+        repository.setListener(this)
     }
 
     fun remove(city: City) {
-        db.remove(
-            city.toFBCity()
-        )
+        repository.remove(city)
     }
 
     fun addCity(name: String) {
 
-        service.getLocation(name) { lat,
-                                    lng ->
+        service.getLocation(name) { lat, lng ->
 
-            if (
-                lat != null &&
-                lng != null
-            ) {
+            if (lat != null && lng != null) {
 
-                db.add(
+                repository.add(
                     City(
                         name = name,
-                        location = LatLng(
-                            lat,
-                            lng
-                        )
-                    ).toFBCity()
+                        location = LatLng(lat, lng)
+                    )
                 )
             }
         }
     }
 
-
-    fun addCity(
-        location: LatLng
-    ) {
+    fun addCity(location: LatLng) {
 
         service.getName(
             location.latitude,
@@ -112,19 +93,26 @@ class MainViewModel(
 
             if (name != null) {
 
-                db.add(
+                repository.add(
                     City(
                         name = name,
                         location = location
-                    ).toFBCity()
+                    )
                 )
             }
         }
     }
 
-    private fun loadWeather(
-        name: String
-    ) {
+    fun update(city: City) {
+
+        repository.update(city)
+
+        _cities[city.name] = city
+
+        forecastMonitor.updateCity(city)
+    }
+
+    private fun loadWeather(name: String) {
 
         service.getWeather(name) { apiWeather ->
 
@@ -135,17 +123,6 @@ class MainViewModel(
                 loadBitmap(name)
             }
         }
-    }
-
-    fun update(city: City) {
-
-        db.update(
-            city.toFBCity()
-        )
-
-        _cities[city.name] = city
-
-        forecastMonitor.updateCity(city)
     }
 
     private fun loadBitmap(name: String) {
@@ -160,9 +137,7 @@ class MainViewModel(
         }
     }
 
-    private fun loadForecast(
-        name: String
-    ) {
+    private fun loadForecast(name: String) {
 
         service.getForecast(name) {
 
@@ -174,9 +149,7 @@ class MainViewModel(
         }
     }
 
-    fun weather(
-        name: String
-    ) =
+    fun weather(name: String) =
         _weather.getOrPut(name) {
 
             loadWeather(name)
@@ -184,9 +157,7 @@ class MainViewModel(
             Weather.LOADING
         }
 
-    fun forecast(
-        name: String
-    ) =
+    fun forecast(name: String) =
         _forecast.getOrPut(name) {
 
             loadForecast(name)
@@ -194,12 +165,9 @@ class MainViewModel(
             emptyList()
         }
 
-    override fun onUserLoaded(
-        user: FBUser
-    ) {
+    override fun onUserLoaded(user: User) {
 
-        _user.value =
-            user.toUser()
+        _user.value = user
     }
 
     override fun onUserSignOut() {
@@ -216,36 +184,26 @@ class MainViewModel(
         _user.value = null
     }
 
-    override fun onCityAdded(
-        city: FBCity
-    ) {
+    override fun onCityAdded(city: City) {
 
-        val newCity = city.toCity()
+        _cities[city.name] = city
 
-        _cities[city.name!!] = newCity
-
-        forecastMonitor.updateCity(newCity)
+        forecastMonitor.updateCity(city)
     }
 
-    override fun onCityUpdated(
-        city: FBCity
-    ) {
+    override fun onCityUpdated(city: City) {
 
-        val newCity = city.toCity()
+        _cities[city.name] = city
+
+        forecastMonitor.updateCity(city)
+    }
+
+    override fun onCityRemoved(city: City) {
+
+        println("REMOVEU ${city.name}")
 
         _cities.remove(city.name)
 
-        _cities[city.name!!] = newCity
-
-        forecastMonitor.updateCity(newCity)
-    }
-
-    override fun onCityRemoved(
-        city: FBCity
-    ) {
-
-        _cities.remove(city.name)
-
-        forecastMonitor.cancelCity(city.toCity())
+        forecastMonitor.cancelCity(city)
     }
 }

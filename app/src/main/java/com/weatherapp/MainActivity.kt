@@ -35,7 +35,9 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.weatherapp.api.WeatherService
 import com.weatherapp.db.fb.FBDatabase
+import com.weatherapp.db.local.LocalDatabase
 import com.weatherapp.monitor.ForecastMonitor
+import com.weatherapp.repo.Repository
 import com.weatherapp.ui.CityDialog
 import com.weatherapp.ui.nav.BottomNavBar
 import com.weatherapp.ui.nav.BottomNavItem
@@ -60,6 +62,26 @@ class MainActivity : ComponentActivity() {
                 FBDatabase()
             }
 
+            val localDB = remember {
+
+                LocalDatabase(
+
+                    this,
+
+                    Firebase.auth.currentUser!!.uid
+                )
+            }
+
+            val repository = remember {
+
+                Repository(
+
+                    fbDB,
+
+                    localDB
+                )
+            }
+
             val weatherService = remember {
                 WeatherService(this)
             }
@@ -70,7 +92,7 @@ class MainActivity : ComponentActivity() {
 
             val viewModel: MainViewModel = viewModel(
                 factory = MainViewModelFactory(
-                    fbDB,
+                    repository,
                     weatherService,
                     forecastMonitor
                 )

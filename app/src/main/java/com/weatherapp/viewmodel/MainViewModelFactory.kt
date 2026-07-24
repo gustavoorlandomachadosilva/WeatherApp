@@ -3,11 +3,11 @@ package com.weatherapp.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.weatherapp.api.WeatherService
-import com.weatherapp.db.fb.FBDatabase
 import com.weatherapp.monitor.ForecastMonitor
+import com.weatherapp.repo.Repository
 
 class MainViewModelFactory(
-    private val db: FBDatabase,
+    private val repository: Repository,
     private val service: WeatherService,
     private val forecastMonitor: ForecastMonitor
 ) : ViewModelProvider.Factory {
@@ -20,7 +20,7 @@ class MainViewModelFactory(
 
             @Suppress("UNCHECKED_CAST")
             return MainViewModel(
-                db,
+                repository,
                 service,
                 forecastMonitor
             ) as T
