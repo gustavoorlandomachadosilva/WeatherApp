@@ -8,6 +8,8 @@ plugins {
     id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 
     alias(libs.plugins.google.gms.google.services)
+
+    id("com.google.devtools.ksp") version "2.2.10-2.0.2"
 }
 
 android {
@@ -65,10 +67,10 @@ android {
     compileOptions {
 
         sourceCompatibility =
-            JavaVersion.VERSION_11
+            JavaVersion.VERSION_21
 
         targetCompatibility =
-            JavaVersion.VERSION_11
+            JavaVersion.VERSION_21
     }
 
     buildFeatures {
@@ -77,9 +79,16 @@ android {
 
         buildConfig = true
     }
+
 }
 
 dependencies {
+    val roomVersion = "2.8.4"
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+
     implementation(
         "androidx.work:work-runtime-ktx:2.10.2"
     )
