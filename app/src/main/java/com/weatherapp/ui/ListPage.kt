@@ -23,6 +23,9 @@ import com.weatherapp.model.City
 import com.weatherapp.model.Weather
 import com.weatherapp.ui.nav.Route
 import com.weatherapp.viewmodel.MainViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
 fun CityItem(
@@ -109,8 +112,8 @@ fun ListPage(
     viewModel: MainViewModel
 ) {
 
-    val cityList =
-        viewModel.cities
+    val cities by viewModel.cities.collectAsStateWithLifecycle(emptyMap())
+    val weatherMap by viewModel.weather.collectAsStateWithLifecycle(emptyMap())
 
     LazyColumn(
         modifier = modifier
@@ -119,16 +122,21 @@ fun ListPage(
     ) {
 
         items(
-            items = cityList,
+            items = cities.values.toList().sortedBy { it.name },
             key = { it.name }
         ) { city ->
+
+            LaunchedEffect(city.name) {
+                viewModel.loadWeather(city.name)
+            }
+
+            val weather = weatherMap[city.name] ?: Weather.LOADING
 
             CityItem(
 
                 city = city,
 
-                weather =
-                    viewModel.weather(city.name),
+                weather = weather,
 
                 onClose = {
                     viewModel.remove(city)
@@ -137,7 +145,6 @@ fun ListPage(
                 onClick = {
 
                     viewModel.city = city.name
-
                     viewModel.page = Route.Home
                 }
             )

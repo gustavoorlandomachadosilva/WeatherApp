@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.core.util.Consumer
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+
             val fbDB = remember {
                 FBDatabase()
             }
@@ -65,19 +67,17 @@ class MainActivity : ComponentActivity() {
             val localDB = remember {
 
                 LocalDatabase(
-
-                    this,
-
-                    Firebase.auth.currentUser!!.uid
+                    context = this,
+                    databaseName =
+                        Firebase.auth.currentUser?.uid
+                            ?: "weather.db"
                 )
             }
 
             val repository = remember {
 
                 Repository(
-
                     fbDB,
-
                     localDB
                 )
             }
@@ -97,6 +97,8 @@ class MainActivity : ComponentActivity() {
                     forecastMonitor
                 )
             )
+
+            val user = viewModel.user.collectAsStateWithLifecycle(null).value
 
             DisposableEffect(Unit) {
 
@@ -184,8 +186,7 @@ class MainActivity : ComponentActivity() {
 
                                 Text(
                                     text = "Bem-vindo/a! ${
-                                        viewModel.user?.name
-                                            ?: "[carregando...]"
+                                        user?.name ?: "[carregando...]"
                                     }"
                                 )
                             },

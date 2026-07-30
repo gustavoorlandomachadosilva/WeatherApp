@@ -1,16 +1,24 @@
 package com.weatherapp.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -19,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.weatherapp.R
 import com.weatherapp.model.Weather
@@ -30,9 +39,24 @@ fun HomePage(
     viewModel: MainViewModel
 ) {
 
+    val weatherMap by viewModel.weather.collectAsStateWithLifecycle(emptyMap())
+    val forecastMap by viewModel.forecast.collectAsStateWithLifecycle(emptyMap())
+    val cities by viewModel.cities.collectAsStateWithLifecycle(emptyMap())
+
+    val city = viewModel.city
+
+    LaunchedEffect(city) {
+
+        city?.let {
+
+            viewModel.loadWeather(it)
+            viewModel.loadForecast(it)
+        }
+    }
+
     Column {
 
-        if (viewModel.city == null) {
+        if (city == null) {
 
             Column(
                 modifier = modifier
@@ -55,15 +79,25 @@ fun HomePage(
 
         } else {
 
-            val city =
-                viewModel.cities.find {
-                    it.name == viewModel.city
+            val currentCity = cities[city]
+            val weather =
+                weatherMap[city] ?: Weather.LOADING
+
+            LaunchedEffect(weather) {
+
+                if (
+                    weather != Weather.LOADING &&
+                    weather != Weather.ERROR
+                ) {
+
+                    viewModel.loadBitmap(city)
                 }
+            }
 
             Row {
 
                 AsyncImage(
-                    model = viewModel.weather(viewModel.city!!).imgUrl,
+                    model = weather.bitmap ?: weather.imgUrl,
                     contentDescription = "Imagem",
                     modifier = Modifier.size(140.dp),
                     error = painterResource(R.drawable.loading)
@@ -71,89 +105,85 @@ fun HomePage(
 
                 Column {
 
-                    Spacer(modifier = Modifier.size(12.dp))
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
 
                         Text(
-                            text = viewModel.city!!,
+                            text = city,
                             fontSize = 28.sp
                         )
 
-                        Spacer(modifier = Modifier.size(8.dp))
-
-                        city?.let {
-
-                            Icon(
-                                imageVector =
-                                    if (it.isMonitored)
-                                        Icons.Filled.Notifications
-                                    else
-                                        Icons.Outlined.Notifications,
-
-                                contentDescription = "Monitorada",
-
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clickable {
-
-                                        viewModel.update(
-                                            it.copy(
-                                                isMonitored =
-                                                    !it.isMonitored
-                                            )
-                                        )
-                                    }
-                            )
+                        currentCity?.let { c ->
+                            IconButton(
+                                onClick = {
+                                    val updatedCity = c.copy(isMonitored = !c.isMonitored)
+                                    viewModel.update(updatedCity)
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (c.isMonitored) Icons.Filled.Notifications else Icons.Outlined.Notifications,
+                                    contentDescription = "Monitorar"
+                                )
+                            }
                         }
                     }
 
-                    viewModel.city?.let { name ->
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
 
-                        val weather =
-                            viewModel.weather(name)
+                    Text(
+                        text = when (weather) {
 
-                        Spacer(modifier = Modifier.size(12.dp))
+                            Weather.LOADING ->
+                                "Carregando clima..."
 
-                        Text(
-                            text =
-                                if (weather == Weather.LOADING)
-                                    "Carregando clima..."
-                                else
-                                    weather.desc,
-                            fontSize = 22.sp
-                        )
+                            Weather.ERROR ->
+                                "Erro ao carregar"
 
-                        Spacer(modifier = Modifier.size(12.dp))
+                            else ->
+                                weather.desc
+                        },
+                        fontSize = 22.sp
+                    )
 
-                        Text(
-                            text =
-                                if (weather == Weather.LOADING)
-                                    "Temp: ..."
-                                else
-                                    "Temp: ${weather.temp}℃",
-                            fontSize = 22.sp
-                        )
-                    }
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
+
+                    Text(
+                        text = when (weather) {
+
+                            Weather.LOADING ->
+                                "Temp: ..."
+
+                            Weather.ERROR ->
+                                "Temp: ---"
+
+                            else ->
+                                "Temp: ${weather.temp}℃"
+                        },
+                        fontSize = 22.sp
+                    )
                 }
             }
 
-            viewModel.city?.let { cityName ->
+            val forecasts =
+                forecastMap[city] ?: emptyList()
 
-                val forecasts =
-                    viewModel.forecast(cityName)
+            LazyColumn {
 
-                LazyColumn {
+                items(forecasts) {
 
-                    items(forecasts ?: emptyList()) {
-
-                        ForecastItem(
-                            forecast = it,
-                            onClick = {}
-                        )
-                    }
+                    ForecastItem(
+                        forecast = it,
+                        onClick = {}
+                    )
                 }
             }
         }

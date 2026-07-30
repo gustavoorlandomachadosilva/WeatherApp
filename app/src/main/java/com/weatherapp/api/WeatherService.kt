@@ -1,22 +1,23 @@
 package com.weatherapp.api
 
-import android.util.Log
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
+import androidx.core.graphics.drawable.toBitmap
 import coil.ImageLoader
 import coil.request.ImageRequest
+import com.google.android.gms.maps.model.LatLng
+import com.weatherapp.BuildConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import retrofit2.Call
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class WeatherService(
     private val context: Context
 ) {
 
-    private val weatherAPI: WeatherServiceAPI
+    private var weatherAPI: WeatherServiceAPI
 
     private val imageLoader =
         ImageLoader.Builder(context)
@@ -27,9 +28,7 @@ class WeatherService(
 
         val retrofitAPI =
             Retrofit.Builder()
-                .baseUrl(
-                    WeatherServiceAPI.BASE_URL
-                )
+                .baseUrl(WeatherServiceAPI.BASE_URL)
                 .addConverterFactory(
                     GsonConverterFactory.create()
                 )
@@ -41,168 +40,117 @@ class WeatherService(
             )
     }
 
-    fun getBitmap(
-        imgUrl: String,
-        onResponse: (Bitmap?) -> Unit
-    ) {
-
-        val request =
-            ImageRequest.Builder(context)
-                .data(imgUrl)
-                .allowHardware(false)
-                .target(
-
-                    onSuccess = { drawable ->
-
-                        val bitmap =
-                            (drawable as BitmapDrawable).bitmap
-
-                        onResponse(bitmap)
-                    },
-
-                    onError = {
-
-                        onResponse(null)
-                    }
-                )
-                .build()
-
-        imageLoader.enqueue(request)
-    }
-
-    fun getName(
+    /**
+     * Busca o nome da cidade pelas coordenadas.
+     */
+    suspend fun getName(
         lat: Double,
-        lng: Double,
-        onResponse: (String?) -> Unit
-    ) {
+        lng: Double
+    ): String? =
+        withContext(Dispatchers.IO) {
 
-        search("$lat,$lng") { loc ->
-
-            onResponse(
-                loc?.name
-            )
+            search("$lat,$lng")?.name
         }
-    }
 
-    fun getForecast(
-        name: String,
-        onResponse:
-            (APIWeatherForecast?) -> Unit
-    ) {
 
-        val call =
-            weatherAPI.forecast(name)
+    /**
+     * Busca as coordenadas da cidade pelo nome.
+     */
+    suspend fun getLocation(
+        name: String
+    ): LatLng? =
+        withContext(Dispatchers.IO) {
 
-        enqueue(call) {
+            val location = search(name)
+            val lat = location?.lat
+            val lon = location?.lon
 
-            onResponse(it)
-        }
-    }
+            if (lat != null && lon != null) {
 
-    fun getWeather(
-        name: String,
-        onResponse:
-            (APICurrentWeather?) -> Unit
-    ) {
+                LatLng(
+                    lat,
+                    lon
+                )
 
-        val call =
-            weatherAPI.weather(name)
+            } else {
 
-        enqueue(call) {
-
-            onResponse(it)
-        }
-    }
-
-    fun getLocation(
-        name: String,
-        onResponse: (
-            lat: Double?,
-            long: Double?
-        ) -> Unit
-    ) {
-
-        search(name) { loc ->
-
-            onResponse(
-                loc?.lat,
-                loc?.lon
-            )
-        }
-    }
-
-    private fun <T> enqueue(
-        call: Call<T?>,
-        onResponse: ((T?) -> Unit)? = null
-    ) {
-
-        call.enqueue(
-
-            object :
-                Callback<T?> {
-
-                override fun onResponse(
-                    call: Call<T?>,
-                    response: Response<T?>
-                ) {
-
-                    onResponse?.invoke(
-                        response.body()
-                    )
-                }
-
-                override fun onFailure(
-                    call: Call<T?>,
-                    t: Throwable
-                ) {
-
-                    Log.w(
-                        "WeatherApp WARNING",
-                        t.message ?: ""
-                    )
-                }
+                null
             }
-        )
-    }
+        }
 
+    /**
+     * Função utilizada pelas duas pesquisas acima.
+     */
     private fun search(
-        query: String,
-        onResponse: (APILocation?) -> Unit
-    ) {
+        query: String
+    ): APILocation? {
 
-        val call =
-            weatherAPI.search(query)
+        val call: Call<List<APILocation>?> =
+            weatherAPI.search(
+                query,
+                BuildConfig.WEATHER_API_KEY
+            )
 
-        call.enqueue(
+        val result =
+            call.execute().body()
 
-            object :
-                Callback<List<APILocation>?> {
-
-                override fun onResponse(
-                    call: Call<List<APILocation>?>,
-                    response: Response<List<APILocation>?>
-                ) {
-
-                    val result =
-                        response.body()
-                            ?.firstOrNull()
-
-                    onResponse(result)
-                }
-
-                override fun onFailure(
-                    call: Call<List<APILocation>?>,
-                    t: Throwable
-                ) {
-
-                    Log.w(
-                        "WeatherApp WARNING",
-                        t.message ?: "Erro"
-                    )
-
-                    onResponse(null)
-                }
-            }
-        )
+        return if (!result.isNullOrEmpty())
+            result[0]
+        else
+            null
     }
+
+    /**
+     * Clima atual.
+     */
+    suspend fun getWeather(
+        name: String
+    ): APICurrentWeather? =
+        withContext(Dispatchers.IO) {
+
+            val call: Call<APICurrentWeather?> =
+                weatherAPI.weather(
+                    name,
+                    BuildConfig.WEATHER_API_KEY
+                )
+
+            call.execute().body()
+        }
+
+    /**
+     * Previsão do tempo.
+     */
+    suspend fun getForecast(
+        name: String
+    ): APIWeatherForecast? =
+        withContext(Dispatchers.IO) {
+
+            val call: Call<APIWeatherForecast?> =
+                weatherAPI.forecast(
+                    name,
+                    BuildConfig.WEATHER_API_KEY
+                )
+
+            call.execute().body()
+        }
+
+    /**
+     * Baixa o ícone do clima.
+     */
+    suspend fun getBitmap(
+        imgUrl: String
+    ): Bitmap? =
+        withContext(Dispatchers.IO) {
+
+            val request =
+                ImageRequest.Builder(context)
+                    .data(imgUrl)
+                    .allowHardware(false)
+                    .build()
+
+            val response =
+                imageLoader.execute(request)
+
+            response.drawable?.toBitmap()
+        }
 }

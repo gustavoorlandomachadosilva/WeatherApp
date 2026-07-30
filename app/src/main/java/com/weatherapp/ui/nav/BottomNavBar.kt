@@ -23,8 +23,13 @@ fun BottomNavBar(
 
             NavigationBarItem(
 
-                icon = {
+                selected = viewModel.page == item.route,
 
+                onClick = {
+                    viewModel.page = item.route
+                },
+
+                icon = {
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title
@@ -32,24 +37,13 @@ fun BottomNavBar(
                 },
 
                 label = {
-
                     Text(
                         text = item.title,
                         fontSize = 12.sp
                     )
                 },
 
-                alwaysShowLabel = true,
-
-                selected =
-                    viewModel.page ==
-                            item.route,
-
-                onClick = {
-
-                    viewModel.page =
-                        item.route
-                }
+                alwaysShowLabel = true
             )
         }
     }

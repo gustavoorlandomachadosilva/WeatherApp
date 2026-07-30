@@ -9,7 +9,7 @@ import com.weatherapp.repo.Repository
 class MainViewModelFactory(
     private val repository: Repository,
     private val service: WeatherService,
-    private val forecastMonitor: ForecastMonitor
+    private val monitor: ForecastMonitor
 ) : ViewModelProvider.Factory {
 
     override fun <T : ViewModel> create(
@@ -22,10 +22,10 @@ class MainViewModelFactory(
             return MainViewModel(
                 repository,
                 service,
-                forecastMonitor
+                monitor
             ) as T
         }
 
-        throw IllegalArgumentException("Unknown ViewModel class")
+        throw IllegalArgumentException("Unknown ViewModel")
     }
 }

@@ -27,6 +27,8 @@ fun APICurrentWeather.toWeather(): Weather {
 
         imgUrl =
             "https:" +
-                    current?.condition?.icon
+                    current?.condition?.icon,
+
+        bitmap = null // Adicionado para satisfazer o parâmetro obrigatório
     )
 }

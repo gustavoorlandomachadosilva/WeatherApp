@@ -1,6 +1,5 @@
 package com.weatherapp.api
 
-import com.weatherapp.BuildConfig
 import retrofit2.Call
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -8,29 +7,29 @@ import retrofit2.http.Query
 interface WeatherServiceAPI {
 
     companion object {
-
         const val BASE_URL =
             "https://api.weatherapi.com/v1/"
-
-        const val API_KEY =
-            BuildConfig.WEATHER_API_KEY
     }
 
-    @GET("search.json?key=$API_KEY&lang=pt_br")
+    @GET("search.json")
     fun search(
-        @Query("q")
-        query: String
+        @Query("q") query: String,
+        @Query("key") key: String,
+        @Query("lang") lang: String = "pt"
     ): Call<List<APILocation>?>
 
-    @GET("current.json?key=$API_KEY&lang=pt")
+    @GET("current.json")
     fun weather(
-        @Query("q")
-        query: String
+        @Query("q") city: String,
+        @Query("key") key: String,
+        @Query("lang") lang: String = "pt"
     ): Call<APICurrentWeather?>
 
-    @GET("forecast.json?key=$API_KEY&days=10&lang=pt")
+    @GET("forecast.json")
     fun forecast(
-        @Query("q")
-        name: String
+        @Query("q") city: String,
+        @Query("key") key: String,
+        @Query("lang") lang: String = "pt",
+        @Query("days") days: Int = 7
     ): Call<APIWeatherForecast?>
 }
